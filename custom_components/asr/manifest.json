@@ -5,10 +5,9 @@
       "@aiakit"
     ],
     "config_flow": true,
-    "dependencies": [],
     "documentation": "https://github.com/aiakit/asr",
-    "homekit": {},
     "iot_class": "cloud_push",
     "issue_tracker": "https://github.com/aiakit/asr/issues",
-    "version": "1.0.0"
-  }
+    "version": "1.0.0",
+    "single_config_entry": true
+}
