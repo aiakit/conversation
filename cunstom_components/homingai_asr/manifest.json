@@ -2,7 +2,7 @@
     "domain": "asr",
     "name": "HomingAI ASR",
     "codeowners": [
-      "@larry-wong"
+      "@aiakit"
     ],
     "config_flow": true,
     "dependencies": [],
