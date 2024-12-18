@@ -14,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
@@ -26,6 +24,8 @@ from homeassistant.components.stt import (
     SpeechResult,
     SpeechResultState,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 # 简化配置，只需要API密钥
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
