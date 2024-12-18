@@ -1,5 +1,5 @@
 {
-    "domain": "homingai_asr",
+    "domain": "asr",
     "name": "HomingAI ASR",
     "codeowners": [
       "@larry-wong"
