@@ -37,12 +37,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SUPPORTED_LANGUAGES = ["zh-CN"]  # 支持的语言
 DEFAULT_LANG = "zh-CN"
 
+
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
 ) -> None:
     async_add_entities([HomingAISTT(hass, config_entry)])
+
 
 class HomingAISTT(stt.SpeechToTextEntity):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -84,11 +86,11 @@ class HomingAISTT(stt.SpeechToTextEntity):
         return [AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+            self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process audio stream to text using HomingAI API."""
         _LOGGER.debug("HomingAI Speech to text process started")
-        
+
         # 收集音频数据
         audio_data = bytes()
         async for chunk in stream:
@@ -102,14 +104,14 @@ class HomingAISTT(stt.SpeechToTextEntity):
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/octet-stream"
                 }
-                
+
                 async with session.post(
-                    self.api_url,
-                    data=audio_data,
-                    headers=headers
+                        self.api_url,
+                        data=audio_data,
+                        headers=headers
                 ) as response:
                     response_json = await response.json()
-                    
+
                     if response.status == 200:
                         text = response_json.get("text", "")
                         return SpeechResult(text, SpeechResultState.SUCCESS)

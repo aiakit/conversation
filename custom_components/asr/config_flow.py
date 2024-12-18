@@ -5,7 +5,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
 
-from .  import DOMAIN
+from .const import DOMAIN
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
@@ -17,13 +17,14 @@ CONFIG_SCHEMA = vol.Schema(
     }
 )
 
+
 class HomingAIConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HomingAI STT."""
 
     VERSION = 1
 
     async def async_step_user(
-        self, user_input: dict[str, any] | None = None
+            self, user_input: dict[str, any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
