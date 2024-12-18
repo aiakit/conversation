@@ -2,6 +2,5 @@
   "name": "asr",
   "homeassistant": "2024.12.4",
   "render_readme": true,
-  "content_in_root": false,
   "country": "CN"
 }
