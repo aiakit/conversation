@@ -1,4 +1,4 @@
-"""The Google Cloud STT integration."""
+"""The HomingAI STT integration."""
 
 from __future__ import annotations
 

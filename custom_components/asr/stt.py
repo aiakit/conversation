@@ -1,4 +1,4 @@
-"""Support for the HomingAI ASR."""
+"""The HomingAI STT integration."""
 
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Constants for the HomingAI ASR integration."""
+"""The HomingAI STT integration."""
 
 
 DOMAIN = "asr"
