@@ -5,7 +5,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .  import DOMAIN
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"

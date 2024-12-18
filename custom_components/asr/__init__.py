@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 
 from .const import DOMAIN
 
-PLATFORMS = [Platform.STT]
+PLATFORMS = (Platform.STT,)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
