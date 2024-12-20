@@ -50,20 +50,27 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
         
-        # 设置为默认代理
-        conversation.async_set_agent(self.hass, self.entry, self, is_default=True)
+        # 设置为代理
+        conversation.async_set_agent(self.hass, self.entry, self)
         
         # 设置首选本地处理命令为开启状态
-        if "conversation" in self.hass.data:
-            conversation_data = self.hass.data["conversation"]
-            if hasattr(conversation_data, "config"):
-                conversation_data.config.update({
-                    "default_agent": "local",
-                    "debug": False
-                })
-        
-        # 如果需要，可以触发配置更新
-        await self.hass.config.async_update()
+        try:
+            if "conversation" in self.hass.data:
+                conversation_data = self.hass.data["conversation"]
+                if hasattr(conversation_data, "config") and conversation_data.config is not None:
+                    # 确保 config 存在且不为 None
+                    if not isinstance(conversation_data.config, dict):
+                        conversation_data.config = {}
+                    
+                    conversation_data.config.update({
+                        "default_agent": "local",
+                        "debug": False
+                    })
+                    
+                    # 如果需要，可以触发配置更新
+                    await self.hass.config.async_update()
+        except Exception as err:
+            _LOGGER.warning("无法设置首选本地处理命令: %s", err)
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
@@ -123,7 +130,7 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
                     )
                     intent_response.async_set_error(
                         intent.IntentResponseErrorCode.UNKNOWN,
-                        f"抱歉，出现错误: {result.get('msg', '未知错误')}"
+                        f"抱歉，出现错��: {result.get('msg', '未知错误')}"
                     )
                     return conversation.ConversationResult(
                         response=intent_response,
