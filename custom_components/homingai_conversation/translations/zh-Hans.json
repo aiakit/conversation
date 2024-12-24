@@ -1,17 +1,17 @@
 {
-    "config": {
-      "step": {
-        "user": {
-          "data": {
-            "client_id": "Client ID",
-            "client_secret": "Client Secret"
-          }
-        }
-      },
-      "error": {
-        "cannot_connect": "Failed to connect",
-        "invalid_auth": "Invalid authentication",
-        "unknown": "Unexpected error"
+  "config": {
+    "step": {
+      "user": {
+        "description": "{risks}",
+        "title": "HomingAI Chat"
       }
+    },
+    "error": {
+      "auth_error": "获取授权码失败，请确认是否在HomingAI官网授权成功",
+      "auth_verify_failed": "授权验证失败，请重试"
+    },
+    "abort": {
+      "already_configured": "此账号已经配置过了"
     }
   }
+}

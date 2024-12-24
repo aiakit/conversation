@@ -1,92 +1,101 @@
-"""Config flow for HomingAI Conversation integration."""
+"""Config flow for HomingAI integration."""
 from __future__ import annotations
 
 import logging
 from typing import Any
-
 import aiohttp
-import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, CONF_ACCESS_TOKEN
+from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResult
+
+from .const import DOMAIN,TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ACCESS_TOKEN): str,
-    }
-)
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """验证用户输入的配置。"""
-    session = async_get_clientsession(hass)
-    headers = {
-        "Authorization": f"Bearer {data[CONF_ACCESS_TOKEN]}",
-        "Content-Type": "application/json"
-    }
-
-    try:
-        async with session.post(
-            "https://api.homingai.com/ha/home/validate",
-            headers=headers,
-            json={},
-        ) as response:
-            if response.status != 200:
-                _LOGGER.error("验证失败，状态码: %s", response.status)
-                raise InvalidAuth
-
-            result = await response.json()
-            if result.get("code") != 200:
-                _LOGGER.error("验证失败，返回码: %s", result.get("code"))
-                raise InvalidAuth
-
-    except aiohttp.ClientError as err:
-        _LOGGER.error("连接到 HomingAI API 失败: %s", err)
-        raise CannotConnect from err
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for HomingAI Conversation."""
+    """Handle a config flow for HomingAI"""
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize flow."""
+        self.code = None
+        self.state = None
+
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
+        auth_url = None
 
+        # 只在首次加载或没有code时获取授权URL
+        if not hasattr(self, 'code') or not self.code:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                            "https://api.homingai.com/ha/home/oauthcode",
+                            json={}
+                    ) as response:
+                        result = await response.json()
+                        if result.get("code") == 200:
+                            self.code = result["data"]["code"]
+                            self.state = result["data"]["state"]
+                        else:
+                            errors["base"] = "auth_error"
+            except Exception as err:
+                _LOGGER.error("Failed to get auth code: %s", err)
+                errors["base"] = "auth_error"
+
+        # 如果有code，生成auth_url
+        if hasattr(self, 'code') and self.code:
+            auth_url = f"https://homingai.com/oauth?code={self.code}&state={self.state}"
+
+        # 如果用户点击了提交按钮
         if user_input is not None:
             try:
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                # 创建唯一ID，防止重复配置
-                await self.async_set_unique_id(user_input[CONF_ACCESS_TOKEN])
-                self._abort_if_unique_id_configured()
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                            "https://api.homingai.com/ha/home/gettoken",
+                            json={
+                                "code": self.code,
+                                "state": self.state
+                            }
+                    ) as response:
+                        result = await response.json()
+                        if result.get("code") == 200:
+                            return self.async_create_entry(
+                                title=TITLE,
+                                data={
+                                    "access_token": result["data"]["access_token"]
+                                }
+                            )
+                        else:
+                            errors["base"] = "auth_verify_failed"
+            except Exception as err:
+                _LOGGER.error("Failed to verify auth: %s", err)
+                errors["base"] = "auth_verify_failed"
 
-                return self.async_create_entry(
-                    title="HomingAI Conversation",
-                    data=user_input,
-                )
+        risks_text = """
+请注意以下风险提示：
+
+1. 您的用户信息和设备信息将会存储在您的 Home Assistant 系统中，我们无法保证 Home Assistant 存储机制的安全性。您需要负责防止您的信息被窃取。
+
+2. 此集成由HomingAI开发维护，可能会出现稳定性问题或其它问题，使用此集成遇到相关问题时，您应当向开源社区寻求帮助。
+
+3. 在使用此集成前，请仔细阅读README。
+
+4. 为了用户能够稳定地使用集成，避免接口被滥用，此集成仅允许在 Home Assistant 使用，详情请参考LICENSE。
+
+请点击下方的提交按钮，然后在打开的网页中完成授权：
+[点击此处去HomingAI官网授权]({auth_url})
+"""
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "risks": risks_text.format(auth_url=auth_url) if auth_url else risks_text
+            }
         )
-
-class CannotConnect(Exception):
-    """Error to indicate we cannot connect."""
-
-class InvalidAuth(Exception):
-    """Error to indicate there is invalid auth."""

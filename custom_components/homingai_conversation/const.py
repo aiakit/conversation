@@ -1,7 +1,7 @@
 """Constants for HomingAI STT integration."""
 
 DOMAIN = "homingai_conversation"
-DEFAULT_NAME = "HomingAI Conversation"
+TITLE = "HomingAI Conversation"
 
 # Supported languages
 SUPPORTED_LANGUAGES = [
@@ -18,6 +18,4 @@ SUPPORTED_LANGUAGES = [
     "zh-Hant-MO",  # 繁体中文（澳门）
     "zh-Hant-TW",  # 繁体中文（台湾）
 ]
-
-CONF_ACCESS_TOKEN = "homingai_access_token"
 

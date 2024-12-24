@@ -9,21 +9,23 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_ACCESS_TOKEN, DOMAIN, SUPPORTED_LANGUAGES
+from .const import DOMAIN, SUPPORTED_LANGUAGES
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up HomingAI conversation."""
     agent = HomingAIAgent(hass, entry)
     async_add_entities([agent])
+
 
 class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConversationAgent):
     """HomingAI conversation agent."""
@@ -43,16 +45,16 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
             model="HomingAI Conversation",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        self.access_token = entry.data[CONF_ACCESS_TOKEN]
+        self.access_token = entry.data.get('access_token', '')
         self.session = async_get_clientsession(hass)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        
+
         # 设置为代理
         conversation.async_set_agent(self.hass, self.entry, self)
-        
+
         # 设置首选本地处理命令为开启状态
         try:
             if "conversation" in self.hass.data:
@@ -61,12 +63,12 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
                     # 确保 config 存在且不为 None
                     if not isinstance(conversation_data.config, dict):
                         conversation_data.config = {}
-                    
+
                     conversation_data.config.update({
                         "default_agent": "local",
                         "debug": False
                     })
-                    
+
                     # 如果需要，可以触发配置更新
                     await self.hass.config.async_update()
         except Exception as err:
@@ -83,23 +85,23 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
         return SUPPORTED_LANGUAGES
 
     async def async_process(
-        self,
-        user_input: conversation.ConversationInput,
-        context: dict[str, Any] | None = None,
-        conversation_id: str | None = None,
+            self,
+            user_input: conversation.ConversationInput,
+            context: dict[str, Any] | None = None,
+            conversation_id: str | None = None,
     ) -> conversation.ConversationResult:
         """Process a sentence."""
         try:
             headers = {"Authorization": f"Bearer {self.access_token}"}
             async with self.session.post(
-                "https://api.homingai.com/ha/home/chat",
-                headers=headers,
-                json={
-                    "content": user_input.text,
-                    "language": user_input.language,
-                    "conversation_id": conversation_id,
-                    "context": context or {},
-                },
+                    "https://api.homingai.com/ha/home/chat",
+                    headers=headers,
+                    json={
+                        "content": user_input.text,
+                        "language": user_input.language,
+                        "conversation_id": conversation_id,
+                        "context": context or {},
+                    },
             ) as response:
                 if response.status != 200:
                     _LOGGER.error(
@@ -116,7 +118,7 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
                     )
 
                 result = await response.json()
-                
+
                 intent_response = intent.IntentResponse(language=user_input.language)
                 if result.get("code") == 200:
                     intent_response.async_set_speech(result.get("msg", ""))
