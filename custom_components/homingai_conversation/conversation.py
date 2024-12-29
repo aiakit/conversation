@@ -132,7 +132,7 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
                     )
                     intent_response.async_set_error(
                         intent.IntentResponseErrorCode.UNKNOWN,
-                        f"抱歉，出现错��: {result.get('msg', '未知错误')}"
+                        f"抱歉，出现错了: {result.get('msg', '未知错误')}"
                     )
                     return conversation.ConversationResult(
                         response=intent_response,
