@@ -92,6 +92,18 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
     ) -> conversation.ConversationResult:
         """Process a sentence."""
         try:
+            # Get user name from user_input context
+            user_name = None
+            if (
+                user_input.context
+                and user_input.context.user_id
+                and (
+                    user := await self.hass.auth.async_get_user(user_input.context.user_id)
+                )
+            ):
+                user_name = user.name
+                _LOGGER.debug("Got user name: %s", user_name)
+
             headers = {"Authorization": f"Bearer {self.access_token}"}
             async with self.session.post(
                     "https://api.homingai.com/ha/home/chat",
@@ -101,6 +113,7 @@ class HomingAIAgent(conversation.ConversationEntity, conversation.AbstractConver
                         "language": user_input.language,
                         "conversation_id": conversation_id,
                         "context": context or {},
+                        "user_name": user_name,  # Add user_name to request
                     },
             ) as response:
                 if response.status != 200:
